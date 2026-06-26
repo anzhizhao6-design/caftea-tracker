@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CafTea Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: #0d0d0d;
+    color: #e8e0d0;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .container { max-width: 640px; margin: 0 auto; }
+
+  header { margin-bottom: 40px; }
+
+  .eyebrow {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #7a7060;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: 38px;
+    font-weight: normal;
+    line-height: 1.15;
+    color: #f5edd8;
+    margin-bottom: 10px;
+  }
+
+  .subtitle {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #4a4438;
+  }
+
+  /* Mode Toggle */
+  .mode-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border: 1px solid #2a2520;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .mode-btn {
+    flex: 1;
+    padding: 14px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: #4a4438;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .mode-btn:hover { background: #161410; color: #7a7060; }
+
+  .mode-btn.active-coffee {
+    background: #1a1208;
+    color: #c8a951;
+    border-right: 1px solid #2a2520;
+  }
+
+  .mode-btn.active-tea {
+    background: #0d1a10;
+    color: #6ab87a;
+  }
+
+  .mode-icon { font-size: 18px; }
+
+  /* API Key */
+  .api-row { margin-bottom: 20px; }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    background: #161410;
+    border: 1px solid #2a2520;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #e8e0d0;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus, input[type="password"]:focus { border-color: var(--accent); }
+  input::placeholder { color: #3a3428; }
+
+  /* Meter */
+  .meter-section {
+    background: #161410;
+    border: 1px solid #2a2520;
+    border-radius: 4px;
+    padding: 24px 24px 20px;
+    margin-bottom: 24px;
+    transition: border-color 0.3s;
+  }
+
+  .meter-section.coffee-mode { border-color: #2a2010; }
+  .meter-section.tea-mode    { border-color: #0d2010; }
+
+  .meter-label {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #7a7060;
+    margin-bottom: 12px;
+  }
+
+  .meter-numbers {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .meter-mg {
+    font-size: 52px;
+    font-weight: normal;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  .meter-unit {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #7a7060;
+  }
+
+  .meter-bar-track {
+    height: 5px;
+    background: #2a2520;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .meter-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease, background-color 0.5s ease;
+    width: 0%;
+  }
+
+  .meter-limit {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #3a3428;
+  }
+
+  /* Input row */
+  .input-section { margin-bottom: 24px; }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .drink-input {
+    flex: 1;
+    font-family: 'Georgia', serif !important;
+    font-size: 15px !important;
+    padding: 13px 16px !important;
+  }
+
+  .add-btn {
+    background: var(--accent);
+    color: #0d0d0d;
+    border: none;
+    border-radius: 4px;
+    padding: 13px 20px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .add-btn:hover { opacity: 0.85; }
+  .add-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Image upload */
+  .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #161410;
+    border: 1px dashed #2a2520;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #7a7060;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.08em;
+  }
+
+  .upload-label:hover { border-color: var(--accent); color: var(--accent); }
+
+  #imageInput { display: none; }
+
+  .image-preview {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    object-fit: cover;
+    display: none;
+    border: 1px solid #2a2520;
+  }
+
+  .image-preview.visible { display: block; }
+
+  .clear-img-btn {
+    background: none;
+    border: none;
+    color: #4a4438;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0;
+    display: none;
+  }
+  .clear-img-btn.visible { display: block; }
+
+  /* AI Response */
+  .ai-response {
+    background: #161410;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    font-size: 15px;
+    line-height: 1.7;
+    display: none;
+  }
+
+  .ai-response.visible { display: block; }
+
+  .thinking {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #7a7060;
+    animation: pulse 1.2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  /* Error */
+  .error-msg {
+    background: #1a0a0a;
+    border-left: 3px solid #c0392b;
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #e07060;
+    margin-bottom: 12px;
+    border-radius: 0 4px 4px 0;
+    display: none;
+  }
+  .error-msg.visible { display: block; }
+
+  /* Log */
+  .log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .log-title {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #7a7060;
+  }
+
+  .clear-btn {
+    background: transparent;
+    color: #4a4438;
+    border: 1px solid #2a2520;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .clear-btn:hover { color: #c0392b; border-color: #c0392b; }
+
+  .log-empty {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #2a2520;
+    text-align: center;
+    padding: 28px 0;
+    border: 1px dashed #1a1810;
+    border-radius: 4px;
+  }
+
+  .log-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 0;
+    border-bottom: 1px solid #161410;
+  }
+  .log-item:last-child { border-bottom: none; }
+
+  .log-badge {
+    font-size: 14px;
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .log-drink { font-size: 15px; color: #e8e0d0; flex: 1; }
+
+  .log-time {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #3a3428;
+  }
+
+  .log-amount {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    min-width: 65px;
+    text-align: right;
+  }
+
+  /* CSS variables per mode */
+  body.coffee { --accent: #c8a951; --bar-ok: #c8a951; --bar-warn: #d4824a; --bar-danger: #c0392b; }
+  body.tea    { --accent: #6ab87a; --bar-ok: #6ab87a; --bar-warn: #a8c84a; --bar-danger: #c8a951; }
+</style>
+</head>
+<body class="coffee">
+<div class="container">
+
+  <header>
+    <div class="eyebrow">AI-Powered Health Tool</div>
+    <h1>CafTea Tracker</h1>
+    <div class="subtitle">Powered by Claude · Track caffeine & tea polyphenols daily</div>
+  </header>
+
+  <!-- Mode Toggle -->
+  <div class="mode-toggle">
+    <button class="mode-btn active-coffee" id="coffeeBtn" onclick="setMode('coffee')">
+      <span class="mode-icon">☕</span> Coffee — Caffeine
+    </button>
+    <button class="mode-btn" id="teaBtn" onclick="setMode('tea')">
+      <span class="mode-icon">🍵</span> Tea — Polyphenols
+    </button>
+  </div>
+
+  <!-- API Key -->
+  <div class="api-row">
+    <input type="password" id="apiKey" placeholder="Claude API key (sk-ant-…)" />
+  </div>
+
+  <!-- Meter -->
+  <div class="meter-section coffee-mode" id="meterSection">
+    <div class="meter-label" id="meterLabel">Today's caffeine intake</div>
+    <div class="meter-numbers">
+      <span class="meter-mg" id="totalAmt" style="color:var(--accent)">0</span>
+      <span class="meter-unit" id="meterUnit">mg caffeine</span>
+    </div>
+    <div class="meter-bar-track">
+      <div class="meter-bar-fill" id="meterBar" style="background:var(--bar-ok)"></div>
+    </div>
+    <div class="meter-limit" id="meterLimit">FDA recommended daily limit: 400 mg caffeine</div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="input-row">
+      <input type="text" class="drink-input" id="drinkInput" placeholder="e.g. grande latte, Red Bull, matcha…" />
+      <button class="add-btn" id="addBtn" onclick="addDrink()">Add</button>
+    </div>
+    <div class="upload-row">
+      <label class="upload-label" for="imageInput">
+        📷 Upload photo
+      </label>
+      <input type="file" id="imageInput" accept="image/*" onchange="handleImage(event)" />
+      <img class="image-preview" id="imagePreview" />
+      <button class="clear-img-btn" id="clearImgBtn" onclick="clearImage()">✕</button>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- AI Response -->
+  <div class="ai-response" id="aiResponse"></div>
+
+  <!-- Log -->
+  <div class="log-header">
+    <div class="log-title">Today's log</div>
+    <button class="clear-btn" onclick="clearLog()">Clear</button>
+  </div>
+  <div id="logList"><div class="log-empty">Nothing logged yet.</div></div>
+
+</div>
+<script>
+  const LIMITS = { coffee: 400, tea: 800 };
+  const UNITS  = { coffee: 'mg caffeine', tea: 'mg polyphenols' };
+  const LABELS = { coffee: "Today's caffeine intake", tea: "Today's polyphenol intake" };
+  const LIMIT_TEXT = {
+    coffee: 'FDA recommended daily limit: 400 mg caffeine',
+    tea:    'General guidance: 400–800 mg/day tea polyphenols (EGCG)'
+  };
+
+  let mode = 'coffee';
+  let today = new Date().toDateString();
+  let logs = JSON.parse(localStorage.getItem('brewLogs') || '{"coffee":[],"tea":[]}');
+  // Reset old-day entries
+  ['coffee','tea'].forEach(m => { logs[m] = (logs[m]||[]).filter(e => e.date === today); });
+
+  let imageBase64 = null;
+  let imageMime   = null;
+
+  function setMode(m) {
+    mode = m;
+    document.body.className = m;
+    document.getElementById('coffeeBtn').className = 'mode-btn' + (m==='coffee' ? ' active-coffee' : '');
+    document.getElementById('teaBtn').className    = 'mode-btn' + (m==='tea'    ? ' active-tea'    : '');
+    document.getElementById('meterSection').className = `meter-section ${m}-mode`;
+    document.getElementById('meterLabel').textContent  = LABELS[m];
+    document.getElementById('meterUnit').textContent   = UNITS[m];
+    document.getElementById('meterLimit').textContent  = LIMIT_TEXT[m];
+    document.getElementById('drinkInput').placeholder  =
+      m === 'coffee' ? 'e.g. grande latte, Red Bull, espresso…'
+                     : 'e.g. green tea, matcha, oolong, pu-erh…';
+    document.getElementById('aiResponse').classList.remove('visible');
+    document.getElementById('errorMsg').classList.remove('visible');
+    updateMeter();
+    renderLog();
+  }
+
+  function getTotal() {
+    return (logs[mode]||[]).reduce((s,e) => s + e.amount, 0);
+  }
+
+  function updateMeter() {
+    const total = getTotal();
+    const pct   = Math.min((total / LIMITS[mode]) * 100, 100);
+    document.getElementById('totalAmt').textContent = total;
+    const bar = document.getElementById('meterBar');
+    bar.style.width = pct + '%';
+    bar.style.background = pct >= 100 ? 'var(--bar-danger)' : pct >= 75 ? 'var(--bar-warn)' : 'var(--bar-ok)';
+  }
+
+  function renderLog() {
+    const el = document.getElementById('logList');
+    const entries = (logs[mode]||[]);
+    if (!entries.length) { el.innerHTML = '<div class="log-empty">Nothing logged yet.</div>'; return; }
+    const icon = mode === 'coffee' ? '☕' : '🍵';
+    el.innerHTML = [...entries].reverse().map(e => `
+      <div class="log-item">
+        <span class="log-badge">${icon}</span>
+        <span class="log-drink">${e.drink}</span>
+        <span class="log-time">${e.time}</span>
+        <span class="log-amount" style="color:var(--accent)">+${e.amount} mg</span>
+      </div>`).join('');
+  }
+
+  function handleImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    imageMime = file.type;
+    const reader = new FileReader();
+    reader.onload = e => {
+      imageBase64 = e.target.result.split(',')[1];
+      document.getElementById('imagePreview').src = e.target.result;
+      document.getElementById('imagePreview').classList.add('visible');
+      document.getElementById('clearImgBtn').classList.add('visible');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearImage() {
+    imageBase64 = null; imageMime = null;
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreview').classList.remove('visible');
+    document.getElementById('clearImgBtn').classList.remove('visible');
+  }
+
+  function buildSystemPrompt() {
+    if (mode === 'coffee') return `You are a caffeine intake assistant. The user will describe or show a caffeinated drink.
+
+1. Identify the drink and estimate its caffeine in mg. Use known values (Starbucks grande latte ~150mg, espresso shot ~63mg, Red Bull 250ml ~80mg, Monster 473ml ~160mg, drip coffee 237ml ~95mg, matcha latte ~70mg). For unknown drinks, give a reasonable estimate.
+2. Given the user's current daily total, give 1–2 sentences of practical advice considering the 400mg FDA limit and time of day.
+
+Respond ONLY with valid JSON: {"amount": <number>, "drink": "<identified drink name>", "advice": "<string>"}`;
+
+    return `You are a tea polyphenol (EGCG & catechins) intake assistant. The user will describe or show a tea drink.
+
+1. Identify the tea and estimate its polyphenol content in mg. Use known values (matcha 240ml ~280mg, green tea bag 240ml ~200mg, oolong 240ml ~150mg, black tea 240ml ~100mg, white tea 240ml ~75mg, pu-erh 240ml ~120mg, bottled green tea 500ml ~100mg). For small-shop teas, give a mid-range estimate and note the uncertainty.
+2. Given the user's current daily total, give 1–2 sentences of advice. General guidance is 400–800mg/day polyphenols is well-tolerated; very high doses (>1000mg EGCG) may stress the liver.
+
+Respond ONLY with valid JSON: {"amount": <number>, "drink": "<identified drink name>", "advice": "<string>"}`;
+  }
+
+  async function addDrink() {
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const drinkEl = document.getElementById('drinkInput');
+    const drink   = drinkEl.value.trim();
+    const btn     = document.getElementById('addBtn');
+    const errorEl = document.getElementById('errorMsg');
+    const aiEl    = document.getElementById('aiResponse');
+
+    errorEl.classList.remove('visible');
+    if (!apiKey) { showError('Please enter your Claude API key.'); return; }
+    if (!drink && !imageBase64) { showError('Enter a drink name or upload a photo.'); return; }
+
+    btn.disabled = true;
+    aiEl.innerHTML = '<span class="thinking">Analyzing…</span>';
+    aiEl.classList.add('visible');
+
+    // Build message content
+    const content = [];
+    if (imageBase64) {
+      content.push({ type: 'image', source: { type: 'base64', media_type: imageMime, data: imageBase64 } });
+    }
+    const textPart = drink
+      ? `I just had: ${drink}. My total ${mode==='coffee'?'caffeine':'polyphenol'} today before this is ${getTotal()}mg. Current time: ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}.`
+      : `I took a photo of my drink above. My total ${mode==='coffee'?'caffeine':'polyphenol'} today before this is ${getTotal()}mg. Current time: ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}. Please identify the drink from the image and estimate accordingly.`;
+    content.push({ type: 'text', text: textPart });
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 300,
+          system: buildSystemPrompt(),
+          messages: [{ role: 'user', content }]
+        })
+      });
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message);
+
+      const text = data.content.map(b => b.text||'').join('').trim();
+      const parsed = JSON.parse(text.replace(/```json|```/g,'').trim());
+      const amount = Math.round(parsed.amount);
+      const drinkName = parsed.drink || drink || 'Unknown drink';
+      const advice = parsed.advice;
+
+      logs[mode].push({ drink: drinkName, amount, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), date: today });
+      localStorage.setItem('brewLogs', JSON.stringify(logs));
+
+      drinkEl.value = '';
+      clearImage();
+      updateMeter();
+      renderLog();
+
+      const unit = mode === 'coffee' ? 'mg caffeine' : 'mg polyphenols';
+      aiEl.innerHTML = `<strong>+${amount} mg</strong> — ${advice}`;
+
+    } catch(err) {
+      aiEl.classList.remove('visible');
+      showError('Error: ' + err.message);
+    }
+
+    btn.disabled = false;
+  }
+
+  function clearLog() {
+    if (!confirm(`Clear today's ${mode} log?`)) return;
+    logs[mode] = [];
+    localStorage.setItem('brewLogs', JSON.stringify(logs));
+    updateMeter();
+    renderLog();
+    document.getElementById('aiResponse').classList.remove('visible');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+
+  document.getElementById('drinkInput').addEventListener('keydown', e => { if(e.key==='Enter') addDrink(); });
+
+  // Init
+  updateMeter();
+  renderLog();
+</script>
+</body>
+</html>
